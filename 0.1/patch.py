@@ -3,8 +3,16 @@ if __name__ == '__main__':
     import warnings
     warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)  # 경고 억제
 
+    import argparse
+    parser = argparse.ArgumentParser(description='스크립트에 전달되는 파라미터 처리')
+    parser.add_argument('shave', type=int, default=3462, help='Max peak shaving')
+    parser.add_argument('--k', type=float, default=1, help='ratio')
+    parser.add_argument('--s', type=int, help='seed number')
+    args = parser.parse_args()
+
     current_directory = os.getcwd()
     parent_directory = os.path.dirname(current_directory)
+    parent_directory = os.path.dirname(parent_directory)
 
     # 최적해 정보 불러오기
     import_directory = parent_directory + "/Data/l2/out/"
@@ -88,10 +96,8 @@ if __name__ == '__main__':
     clusters = fcluster(Z, threshold, criterion='distance')
 
     #클러스터에 해당하는 솔루션 할당하기
-    current_directory = os.getcwd()
-    parent_directory = os.path.dirname(current_directory)
-    seedNum = str(43)
-    import_directory = parent_directory + "/Data/l1/out/" + seedNum
+    # seedNum = str(43)
+    import_directory = parent_directory + "/Data/l1/out/" + args.s
 
     # Range 운행 불러오기
     file_name = "/schedule_range.txt"
@@ -199,11 +205,7 @@ if __name__ == '__main__':
     heuristic_solution['charger_count'] = heuristic_solution.apply(unseize_charger, axis=1)
 
     ### 피크 방전량 제약
-    import argparse
-    parser = argparse.ArgumentParser(description='스크립트에 전달되는 파라미터 처리')
-    parser.add_argument('shave', type=int, default=3462, help='Max peak shaving')
-    parser.add_argument('--k', type=float, default=1, help='ratio')
-    args = parser.parse_args()
+    
     # max_discharge = 3462
     # k = 1
     heuristic_solution = peak_discharge_restraint(heuristic_solution, args.shave, args.k)
