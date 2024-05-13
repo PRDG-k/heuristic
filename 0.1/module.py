@@ -240,6 +240,7 @@ def peak_discharge_restraint(df, max_discharge, ratio):
         _bus_list = set(available_group['bus'])
         day_bus_discharge = _count / len(_bus_list)
         
+        # 버스 별로 충전 횟수 할당
         for _n in _bus_list:
             filt = available_group['bus'] == _n
             available_bus = available_group[filt]
@@ -382,7 +383,7 @@ def rorc_restraint_peak_include(df):
 
     # 값이 바뀌는 순간을 가지는 행만 선택
     change_points = df[df['departure']]
-    change_points = change_points[::2]
+    change_points = change_points[change_points['operation'] == 'o']
 
     lack_soc = pd.DataFrame(columns=df.columns)
     rows = []
@@ -477,7 +478,7 @@ def rorc_restraint_hard_relax(df):
 
     # 값이 바뀌는 순간을 가지는 행만 선택
     change_points = df[df['departure']]
-    change_points = change_points[::2]
+    change_points = change_points[change_points['operation'] == 'o']
 
     lack_soc = pd.DataFrame(columns=df.columns)
     rows = []

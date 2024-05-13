@@ -7,7 +7,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='스크립트에 전달되는 파라미터 처리')
     parser.add_argument('shave', type=int, default=3462, help='Max peak shaving')
     parser.add_argument('--k', type=float, default=1, help='ratio')
-    parser.add_argument('--s', type=int, help='seed number')
+    parser.add_argument('--s', type=str, help='seed number')
     args = parser.parse_args()
 
     current_directory = os.getcwd()
