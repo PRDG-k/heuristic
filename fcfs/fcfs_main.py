@@ -19,6 +19,7 @@ if __name__ == '__main__':
     file_name = "/schedule_range.txt"
 
     schedule = {}
+    soc_status = {}
 
     with open(import_directory + file_name, 'r') as file:
         for line in file:
@@ -28,6 +29,11 @@ if __name__ == '__main__':
             items = parts[1:]
             # schedule[key] = items
             schedule[key] = sorted(items, key=lambda x: int(x))
+
+            if key[0] == 1:
+                soc_status[key] = 200
+            else:
+                soc_status[key] = 300
 
     # 충전소 데이터 불러오기
     import_directory = parent_directory + "/Data/l2/out/"
@@ -51,7 +57,27 @@ if __name__ == '__main__':
 
     on_station = on_station_list(schedule, NT)
 
+    consumption = 0.25
+    charge = 0.4166667
+
+    import time
+
+    # 코드 작동 시간 측정
+    start_time = time.time()  # 시작 시간
+
     for t in T:
-        calculate_demand
+        for bus, on in on_station.items:
+            # 운행중
+            if on[0] != t:
+                soc_status[bus] = soc_status[bus] - consumption
+            else:
+                required = calculate_demand(bus, soc_status[bus])
+                if required > 0:
+                    soc_status[bus] = soc_status[bus] + charge
+            
+
+
     
-    
+    end_time = time.time()  # 종료 시간
+    elapsed_time = end_time - start_time  # 작동 시간 계산
+    print(f"\n코드 작동 시간: {elapsed_time:.4f}초")
