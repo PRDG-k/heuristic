@@ -2,8 +2,9 @@ def on_station_list(schedules, nt):
     T = set(range(1,nt + 1))
     
     station_list = {}
-    for bus, sch in schedules.items:
-        on = T - set(sch)
+    for bus, sch in schedules.items():
+        _list = list(map(int, sch))
+        on = T - set(_list)
 
         station_list[bus] = sorted(list(on))
     

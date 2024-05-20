@@ -1,5 +1,6 @@
 if __name__ == '__main__':
     import os
+    import pandas as pd
     import argparse
     from fcfs_module import *
 
@@ -30,32 +31,22 @@ if __name__ == '__main__':
             # schedule[key] = items
             schedule[key] = sorted(items, key=lambda x: int(x))
 
-            if key[0] == 1:
+            if key[0] == '1':
                 soc_status[key] = 200
             else:
                 soc_status[key] = 300
 
     # 충전소 데이터 불러오기
-    import_directory = parent_directory + "/Data/l2/out/"
-    file_name = "/prob_info.txt"
-
-    prob_info = {}
-    column = ['status', 'obj_value', 'period', 'unit',
-            'station', 'port', 'bandwidth', 'power', 'RORC']
-    with open(import_directory + file_name, 'r') as file:
-        index = 0
-        for line in file:
-            parts = line.strip().split()
-
-            key = column[index]
-            prob_info[key] = eval(parts[0])
-
-            index = index + 1
+    # import_directory = parent_directory + "/Data/l2/out/"
+    # file_name = "prob_info.csv"
+    # prob_info = pd.read_csv(import_directory + file_name)
     
-    NT = int(prob_info['period'])
+    # NT = int(prob_info['period'])
+    NT = int(1440)
     T = range(1, NT+1)
 
     on_station = on_station_list(schedule, NT)
+    soultion = pd.DataFrame(columns=['bus', 'period', 'charge', 'discharge', 'consumption'])
 
     consumption = 0.25
     charge = 0.4166667
@@ -66,17 +57,20 @@ if __name__ == '__main__':
     start_time = time.time()  # 시작 시간
 
     for t in T:
-        for bus, on in on_station.items:
+        for bus, on in on_station.items():
             # 운행중
-            if on[0] != t:
-                soc_status[bus] = soc_status[bus] - consumption
-            else:
-                required = calculate_demand(bus, soc_status[bus])
-                if required > 0:
-                    soc_status[bus] = soc_status[bus] + charge
+            # print(f"{on[0]} ~~ {t}")
+            try:
+                if on[0] != str(t):
+                    soc_status[bus] = soc_status[bus] - consumption
+                else:
+                    required = calculate_demand(bus, soc_status[bus])
+                    if required > 0:
+                        soc_status[bus] = soc_status[bus] + charge
             
-
-
+                del on[0]
+            except IndexError:
+                print(f"{bus}: finished")
     
     end_time = time.time()  # 종료 시간
     elapsed_time = end_time - start_time  # 작동 시간 계산
