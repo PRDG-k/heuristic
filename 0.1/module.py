@@ -210,7 +210,6 @@ def releveling(df):
 def peak_discharge_restraint(df, max_discharge, ratio):
     _diff  = 0
     required_discharge = max_discharge * ratio
-    term_discharge = required_discharge/5
     _bandwidth = 0.416667
 
     # 'bus' 컬럼을 기준으로 그룹화
@@ -220,32 +219,22 @@ def peak_discharge_restraint(df, max_discharge, ratio):
     # peak_group = df[filt]
     peak_group = df[df['peak']]
 
-    for i in range(1,6):
-        filt = (peak_group['period'] <= days[i]) & (peak_group['period'] > days[i-1])
-        day_group = peak_group[filt]
-        _diff = term_discharge - day_group['discharge'].sum()
+    # 방전량 차이
+    _diff = required_discharge - peak_group['discharge'].sum()
+    _count = math.ceil(_diff / _bandwidth)
 
+    filt = (peak_group['bus'] == _n) & (peak_group['port_count'] == 0) & (peak_group['consumption'] == 0)
+    available_group = peak_group[filt]
+    _bus_list = set(available_group['bus'])
+    column_counts = available_group['column_name'].value_counts().to_dict()
+
+    # 버스 별로 방전 횟수 할당
+    for _n in _bus_list:
         if _diff <0:
             continue
 
-        # 필요한 충전 횟수 계산
-        _count = math.ceil(_diff / _bandwidth)
-
-        filt = (day_group['port_count'] == 0) & (day_group['consumption'] == 0)
-        available_group = day_group[filt]
-
         if len(available_group) < _count:
             print(f"NOT ENOUGH RESOURCE TO DISCHARGE, NEED: {_count - len(available_group)}")
-
-        _bus_list = set(available_group['bus'])
-        day_bus_discharge = _count / len(_bus_list)
-        
-        # 버스 별로 충전 횟수 할당
-        for _n in _bus_list:
-            filt = available_group['bus'] == _n
-            available_bus = available_group[filt]
-            
-            day_bus_discharge = min(len(available_bus), day_bus_discharge)
 
         _dl = []
         _pl = []
