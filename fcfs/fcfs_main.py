@@ -1,65 +1,22 @@
 if __name__ == '__main__':
-    import os
     import pandas as pd
-    import argparse
     from fcfs_module import *
+    from file_import import *
 
-    current_directory = os.getcwd()
-    parent_directory = os.path.dirname(current_directory)
-    # parent_directory = os.path.dirname(parent_directory)
-    
-    args = {}
-    with open("fcfs/args.txt", 'r') as file:
-        for line in file:
-            parts = line.strip().split(' ')
-
-            key = parts[0]
-            items = parts[1]
-            args[key] = items
-
-
-    # 버스 운행 정보 불러오기
-    import_directory = parent_directory + "/Data/l1/out/" + args["s"]
-    file_name = "/schedule_range.txt"
-
-    schedule = {}
-    solution = {}
-    charge_finished = {}
-
-    with open(import_directory + file_name, 'r') as file:
-        for line in file:
-            parts = line.strip().split(' ')
-
-            key = parts[0]
-            items = parts[1:]
-            # schedule[key] = items
-            schedule[key] = sorted(items, key=lambda x: int(x))
-            
-            charge_finished[key] = {False}
-    
+    args = import_args()
+    schedule, charge_finished = import_bus_schedule(args['s'])
     bus_list = list(schedule.keys())
-    solution['bus'] = [n for n in bus_list]
-    solution['period'] = [0 for _ in bus_list]
-    solution['charge'] = [0 for _ in bus_list]
-    solution['discharge'] = [0 for _ in bus_list]
-    solution['consumption'] = [0 for _ in bus_list]
-    solution['SOC'] = [check_bus_type(n) for n in bus_list]
-    solution = pd.DataFrame(solution)
-
-    # 충전소 데이터 불러오기
-    # import_directory = parent_directory + "/Data/l2/out/"
-    # file_name = "prob_info.csv"
-    # prob_info = pd.read_csv(import_directory + file_name)
+    e_price, s_price = import_price()
     
-    # NT = int(prob_info['period'])
+    solution = init_tzero(bus_list)
+
     NT = int(1440)
     T = range(1, NT+1)
 
     on_station = on_station_list(schedule, NT)
     on_charging = []
+    waiting = []
     
-    consumption = 0.25
-    charge = 0.4166667
 
     import time
 
@@ -67,8 +24,6 @@ if __name__ == '__main__':
     start_time = time.time()  # 시작 시간
 
     for t in T:
-        print(f"TNOW: {t}")
-        
         for bus in on_station:
             L = on_station[bus]
 
@@ -90,7 +45,7 @@ if __name__ == '__main__':
             except IndexError:
                 print(f"\nPERIOD: {t}")
                 print(f"---BUS: {bus} finished---")
-                charge_finished[key] = True
+                charge_finished[bus] = True
                 
     
     end_time = time.time()  # 종료 시간
