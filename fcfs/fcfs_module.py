@@ -1,8 +1,30 @@
+## LITERAL
 peak = ([i for i in range(97, 145)] + [i  for i in range(156, 265)] +
             [i + 288 for i in range(97, 145)] + [i + 288  for i in range(156, 265)] +
             [i + 288*2 for i in range(97, 145)] + [i + 288*2  for i in range(156, 265)] +
             [i + 288*3 for i in range(97, 145)] + [i + 288*3  for i in range(156, 265)] +
             [i + 288*4 for i in range(97, 145)] + [i + 288*4  for i in range(156, 265)])
+
+bandwidth = 0.4166667
+consumption = 0.25
+
+## Variables
+# list of seize n
+seize_list = []
+
+# list of required n
+wait_list = []
+
+## Template
+def TEMPLATE(bus, t, soc, type):
+    if type == 0:
+        return {'bus': bus, 'period': t, "charge": bandwidth, "discharge": 0, "consumption": 0, "SOC": soc + bandwidth}
+    if type == 1:
+        return {'bus': bus, 'period': t, "charge": 0, "discharge": bandwidth, "consumption": 0, "SOC": soc - bandwidth}
+    if type == 2:
+        return {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": consumption, "SOC": soc - consumption}
+    if type == 4:
+        return {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
 
 def on_station_list(schedules, nt):
     T = set(range(1,nt + 1))
@@ -53,19 +75,51 @@ def bus_charging(charging_list, bus, t, soc):
     return _sol
 
 def check_peak(row):
-    # peak = ([i for i in range(97, 145)] + [i  for i in range(156, 265)] +
-    #         [i + 288 for i in range(97, 145)] + [i + 288  for i in range(156, 265)] +
-    #         [i + 288*2 for i in range(97, 145)] + [i + 288*2  for i in range(156, 265)] +
-    #         [i + 288*3 for i in range(97, 145)] + [i + 288*3  for i in range(156, 265)] +
-    #         [i + 288*4 for i in range(97, 145)] + [i + 288*4  for i in range(156, 265)])
     if row in peak:
         return True
     else:
         return False
+    
+def in_list_decision(seize_list, bus, t, soc):
+    is_required = calculate_demand(bus, soc) > 0
+    is_peak = check_peak(t)
+
+    # BASE RULE #
+    if len(wait_list) != 0:
+        remove_bus(seize_list, bus)
+        _sol = TEMPLATE(bus, t, soc, 4)
+        return _sol
+
+    # Condition
+    if is_required:
+        _sol = TEMPLATE(bus, t, soc, 0)
+    else:
+        if is_peak:
+            _sol = _sol = TEMPLATE(bus, t, soc, 1)
+        else:
+            _sol = TEMPLATE(bus, t, soc, 0)
+    return _sol
+
+def not_in_list_decision(seize_list, bus, t, soc):
+    is_required = calculate_demand(bus, soc) > 0
+    is_peak = check_peak(t)
+
+    if len(seize_list) >= 30:
+        if is_required:
+            _sol = TEMPLATE(bus, t, soc, 4)
+            wait_list.append(bus)
+        else:
+            _sol = TEMPLATE(bus, t, soc, 4)
+            pass
+    else:
+        if is_peak:
+            
+
+
+    seize_list.append(bus)
+    return _sol
 
 def seize_charger(charging_list, bus, t, soc):
-    bandwidth = 0.4166667
-    required = calculate_demand(bus, soc)
 
     if bus in charging_list:
         if len(charging_list) == 30:

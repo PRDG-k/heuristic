@@ -14,8 +14,12 @@ if __name__ == '__main__':
     T = range(1, NT+1)
 
     on_station = on_station_list(schedule, NT)
-    on_charging = []
-    waiting = []
+
+    # # list of seize n
+    # seize_list = []
+
+    # # list of required n
+    # wait_list = []
     
 
     import time
@@ -25,19 +29,24 @@ if __name__ == '__main__':
 
     for t in T:
         for bus in on_station:
+            # 차고지에 있는 시간 리스트
             L = on_station[bus]
 
-            if charge_finished[bus] == True:
-                continue
+            # if charge_finished[bus] == True:
+            #     continue
+            if bus in seize_list:
+                _sol = in_list_decision()
+            else:
+                _sol = not_in_list_decision()
 
             try:
                 filt= (solution['bus'] == bus) & (solution['period'] == t-1)
                 _soc = solution.loc[filt, 'SOC'].values
 
                 if L[0] != t:
-                    _sol = bus_departure(on_charging, bus, t, _soc)
+                    _sol = bus_departure(seize_list, bus, t, _soc)
                 else:
-                    _sol = bus_charging(on_charging, bus, t, _soc)
+                    _sol = bus_charging(seize_list, bus, t, _soc)
                     del L[0]
                 
                 solution = pd.concat([solution, pd.DataFrame(_sol)], ignore_index=True)
