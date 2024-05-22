@@ -51,28 +51,28 @@ def remove_bus(charging_list, bus):
     if bus in charging_list:
         charging_list.remove(bus)
 
-def bus_departure(charging_list, bus, t, soc):
+# def bus_departure(charging_list, bus, t, soc):
 
-    remove_bus(charging_list, bus)
+#     remove_bus(charging_list, bus)
 
-    consumption = 0.25
-    sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": consumption, "SOC": soc - consumption}
+#     consumption = 0.25
+#     sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": consumption, "SOC": soc - consumption}
 
-    return sol
+#     return sol
 
-def bus_charging(charging_list, bus, t, soc):
+# def bus_charging(charging_list, bus, t, soc):
 
-    bandwidth = 0.4166667
-    required = calculate_demand(bus, soc)
+#     bandwidth = 0.4166667
+#     required = calculate_demand(bus, soc)
 
-    if (required > 0) & (len(charging_list) <= 30):
-        _sol = {'bus': bus, 'period': t, "charge": bandwidth, "discharge": 0, "consumption": 0, "SOC": soc + bandwidth}
-        charging_list.append(bus)
-    else:
-        _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
-        remove_bus(charging_list, bus)
+#     if (required > 0) & (len(charging_list) <= 30):
+#         _sol = {'bus': bus, 'period': t, "charge": bandwidth, "discharge": 0, "consumption": 0, "SOC": soc + bandwidth}
+#         charging_list.append(bus)
+#     else:
+#         _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
+#         remove_bus(charging_list, bus)
 
-    return _sol
+#     return _sol
 
 def check_peak(row):
     if row in peak:
@@ -105,6 +105,7 @@ def not_in_list_decision(seize_list, bus, t, soc):
     is_peak = check_peak(t)
 
     if len(seize_list) >= 30:
+        # Not seizable
         if is_required:
             _sol = TEMPLATE(bus, t, soc, 4)
             wait_list.append(bus)
@@ -112,32 +113,17 @@ def not_in_list_decision(seize_list, bus, t, soc):
             _sol = TEMPLATE(bus, t, soc, 4)
             pass
     else:
-        if is_peak:
-            
-
-
-    seize_list.append(bus)
+        # seizable
+        if is_required:
+            _sol = TEMPLATE(bus, t, soc, 0)
+            seize_list.append(bus)
+        else:
+            if is_peak:
+                # Discharge
+                _sol = TEMPLATE(bus, t, soc, 1)
+                seize_list.append(bus)
+            else:
+                # Charge
+                _sol = TEMPLATE(bus, t, soc, 0)
+                seize_list.append(bus)
     return _sol
-
-def seize_charger(charging_list, bus, t, soc):
-
-    if bus in charging_list:
-        if len(charging_list) == 30:
-            remove_bus(charging_list, bus)
-            _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
-    if len(charging_list) > 30:
-        _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
-        remove_bus(charging_list, bus)
-
-
-    if (required > 0) & (len(charging_list) <= 30) & (not check_peak(t)):
-        _sol = {'bus': bus, 'period': t, "charge": bandwidth, "discharge": 0, "consumption": 0, "SOC": soc + bandwidth}
-        charging_list.append(bus)
-    elif (required < 0) & (len(charging_list) <= 30) & ():
-
-    else:
-        _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
-        remove_bus(charging_list, bus)
-
-    return _sol
-

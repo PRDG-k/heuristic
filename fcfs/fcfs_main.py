@@ -39,6 +39,8 @@ if __name__ == '__main__':
             else:
                 _sol = not_in_list_decision()
 
+
+
             try:
                 filt= (solution['bus'] == bus) & (solution['period'] == t-1)
                 _soc = solution.loc[filt, 'SOC'].values
