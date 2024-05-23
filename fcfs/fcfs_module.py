@@ -47,9 +47,9 @@ def calculate_demand(bus, soc):
     else:
         return capa['n_bus'] * 0.7 - soc
     
-def remove_bus(charging_list, bus):
-    if bus in charging_list:
-        charging_list.remove(bus)
+def remove_bus(bus):
+    if bus in seize_list:
+        seize_list.remove(bus)
 
 # def bus_departure(charging_list, bus, t, soc):
 
@@ -79,14 +79,15 @@ def check_peak(row):
         return True
     else:
         return False
-    
-def in_list_decision(seize_list, bus, t, soc):
+
+
+def in_list_decision( bus, t, soc):
     is_required = calculate_demand(bus, soc) > 0
     is_peak = check_peak(t)
 
     # BASE RULE #
-    if len(wait_list) != 0:
-        remove_bus(seize_list, bus)
+    if (len(wait_list) != 0) & (not is_required):
+        remove_bus(bus)
         _sol = TEMPLATE(bus, t, soc, 4)
         return _sol
 
@@ -100,7 +101,8 @@ def in_list_decision(seize_list, bus, t, soc):
             _sol = TEMPLATE(bus, t, soc, 0)
     return _sol
 
-def not_in_list_decision(seize_list, bus, t, soc):
+
+def not_in_list_decision(bus, t, soc):
     is_required = calculate_demand(bus, soc) > 0
     is_peak = check_peak(t)
 
