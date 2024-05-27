@@ -8,36 +8,6 @@ from matplotlib import rc
 rc("font", family='AppleGothic')
 
 
-def open_schedule_se(file_directory):
-    schedule = {}
-
-    with open(file_directory, 'r') as file:
-        for line in file:
-            parts = line.strip().split(',')
-
-            key = parts[0]
-            items = parts[1:]
-            # schedule[key] = items
-            schedule[key] = sorted(items[::2], key=lambda x: int(x))
-    return schedule
-
-def extract_head(schedule):
-    head = []
-    for bus, sch in schedule.items():
-        temp = []
-        i = 1
-        for d in sch:
-            if 288 * (i-1) <= int(d) & int(d) <= 288 * i:
-                temp.append(d)
-            else:
-                i = i + 1
-                head.append(temp)
-                temp = []
-                temp.append(d)
-        if len(temp) != 0:
-            head.append(temp)
-            
-    return head
 
 def create_mean_distance_list(label):
     mean_distance_list = []
@@ -62,18 +32,7 @@ def cosine_similarity(vec1, vec2):
         return 0 
     return dot_product / (norm_vec1 * norm_vec2)
 
-def open_schedule_range(file_directory):
-    schedule = {}
 
-    with open(file_directory, 'r') as file:
-        for line in file:
-            parts = line.strip().split(" ")
-             
-            key = parts[0]
-            items = parts[1:]
-            schedule[key] = sorted(items, key=lambda x: int(x))
-            
-    return schedule
 
 def extract_range(schedule):
     head = []
@@ -209,6 +168,8 @@ def releveling(df):
 
 def peak_discharge_restraint(df, max_discharge, ratio):
     _diff  = 0
+    ratio = float(ratio)
+    max_discharge = float(max_discharge)
     required_discharge = max_discharge * ratio
     _bandwidth = 0.416667
 
@@ -218,40 +179,55 @@ def peak_discharge_restraint(df, max_discharge, ratio):
     # filt = df['peak'] == True
     # peak_group = df[filt]
     peak_group = df[df['peak']]
+    t_available_group = peak_group[(peak_group['port_count'] == 0) & (peak_group['consumption'] == 0)]
+    total_count = len(t_available_group)
 
     # 방전량 차이
     _diff = required_discharge - peak_group['discharge'].sum()
     _count = math.ceil(_diff / _bandwidth)
 
-    filt = (peak_group['bus'] == _n) & (peak_group['port_count'] == 0) & (peak_group['consumption'] == 0)
-    available_group = peak_group[filt]
-    _bus_list = set(available_group['bus'])
-    column_counts = available_group['column_name'].value_counts().to_dict()
+    _peak_list = set(peak_group['bus'])
+
+    assign_count = {}
+    
+    if total_count != 0:
+        for _n in _peak_list:
+            filt = (peak_group['bus'] == _n) & (peak_group['port_count'] == 0) & (peak_group['consumption'] == 0)
+            _available = peak_group[filt]
+
+            column_counts = len(_available)
+            assign_count[_n] = int(column_counts / total_count * _count)
+
+    if len(t_available_group) < _count:
+        print(f"NOT ENOUGH RESOURCE TO DISCHARGE, NEED: {_count - len(t_available_group)}")
+
+    _bus_list = set(t_available_group['bus'])
 
     # 버스 별로 방전 횟수 할당
     for _n in _bus_list:
         if _diff <0:
-            continue
+            break
 
-        if len(available_group) < _count:
-            print(f"NOT ENOUGH RESOURCE TO DISCHARGE, NEED: {_count - len(available_group)}")
+        filt = (t_available_group['bus'] == _n)
+        available_group = t_available_group[filt]
 
         _dl = []
         _pl = []
         _cl = []
 
         # 할당
-        for i in range(len(available_group)):
-            if _count > 0:
+        for _ in range(len(available_group)):
+            if assign_count[_n] > 0:
                 _dl.append(_bandwidth)
                 _pl.append(2)
                 _cl.append(1)
+                assign_count[_n] = assign_count[_n] -1
+
             else:
                 _dl.append(0)
                 _pl.append(0)
                 _cl.append(0)
-                
-            _count -= 1
+
 
         available_group['discharge'] = _dl
         available_group['port_count'] = _pl

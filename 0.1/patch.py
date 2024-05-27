@@ -1,50 +1,23 @@
 if __name__ == '__main__':
     from module import *
+    from file_processing import *
     import warnings
     warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)  # 경고 억제
 
-    import argparse
-    parser = argparse.ArgumentParser(description='스크립트에 전달되는 파라미터 처리')
-    parser.add_argument('shave', type=int, default=3462, help='Max peak shaving')
-    parser.add_argument('--k', type=float, default=1, help='ratio')
-    parser.add_argument('--s', type=str, help='seed number')
-    args = parser.parse_args()
+    args = import_args()
 
-    current_directory = os.getcwd()
-    parent_directory = os.path.dirname(current_directory)
-    parent_directory = os.path.dirname(parent_directory)
+    # 최적해
+    optimal_solution = import_opt_sol()
 
-    # 최적해 정보 불러오기
-    import_directory = parent_directory + "/Data/l2/out/"
-    folder_directory = "multiobj/"
-    file_name = "scheduling_multiobj.csv"
-    type_spec = {'charge': 'float',
-                'discharge': 'float',
-                'period': 'int'}
-
-    file_directory = import_directory + folder_directory + file_name
-
-    #period~>288마다 하루, 1440시 지나면 다른 버스 period 시작
-    optimal_solution = pd.read_csv(file_directory,dtype=type_spec)
-
+    # 푼 문제의 스케줄
     # import 경로
     import_directory = parent_directory + "/Data/l1/out/final/5min_30bus/"
-
-    # Range 운행 정보 불러오기, 모든 운행시점이 포함되어 있음
     file_name = 'schedule_range.txt'
     file_directory = import_directory + file_name
     schedule = open_schedule_range(file_directory)
 
     # 가격 데이터 불러오기
-    file_name = "ePrice.csv"
-    import_directory = parent_directory + "/Data/l2/out/sum/" + file_name
-
-    e_price = pd.read_csv(import_directory)
-
-    file_name = "sPrice.csv"
-    import_directory = parent_directory + "/Data/l2/out/sum/" + file_name
-
-    s_price = pd.read_csv(import_directory)
+    e_price, s_price = import_price()
 
     # """head"""
     head = extract_head(schedule)
@@ -95,11 +68,10 @@ if __name__ == '__main__':
     threshold = 0.7  # 클러스터링 임계값 설정
     clusters = fcluster(Z, threshold, criterion='distance')
 
-    #클러스터에 해당하는 솔루션 할당하기
-    # seedNum = str(43)
-    import_directory = parent_directory + "/Data/l1/out/" + args.s
+    #"클러스터에 해당하는 솔루션 할당하기"
 
     # Range 운행 불러오기
+    import_directory = parent_directory + "/Data/l1/out/" + args['s']
     file_name = "/schedule_range.txt"
     new_schedule = open_schedule_range(import_directory + file_name)
 
@@ -208,7 +180,7 @@ if __name__ == '__main__':
     
     # max_discharge = 3462
     # k = 1
-    heuristic_solution = peak_discharge_restraint(heuristic_solution, args.shave, args.k)
+    heuristic_solution = peak_discharge_restraint(heuristic_solution, args["shave"], args['k'])
 
     ### level 조정
     heuristic_solution['SOC'] = releveling(heuristic_solution)
