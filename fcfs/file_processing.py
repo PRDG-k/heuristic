@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from fcfs_module import peak
+import time
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
@@ -139,3 +140,10 @@ def export_result(_solution, _time, _count):
         file.write(f"Solving Time: {_time}\n")
         file.write(f"Peak Shaving: {shaving_amount}\n")
         file.write(f"Iteration Count: {_count}\n")
+
+
+def record_time(st):
+    nt = time.time()
+    print(f"\n코드 작동 시간: {nt - st:.4f}초")
+
+    return nt

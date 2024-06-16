@@ -15,13 +15,6 @@ if __name__ == '__main__':
 
     on_station = on_station_list(schedule, NT)
 
-    # # list of seize n
-    # seize_list = []
-
-    # # list of required n
-    # wait_list = []
-    
-
     import time
 
     # 코드 작동 시간 측정
@@ -29,22 +22,21 @@ if __name__ == '__main__':
     start_time = time.time()  # 시작 시간
 
     iter_count = 0
+    skip_count = 0
     for t in T:
         for bus in on_station:
             # 차고지에 있는 시간 리스트
             L = on_station[bus]
-
-            # if charge_finished[bus] == True:
-            #     continue
 
             try:
                 filt= (solution['bus'] == bus) & (solution['period'] == t-1)
                 _soc = solution.loc[filt, 'SOC'].values
 
                 if L[0] != t:
-                    # driving
+                    # Driving
                     _sol = TEMPLATE(bus, t, _soc, 2)
                 else:
+                    # On station
                     if bus in seize_list:
                         _sol = in_list_decision(bus, t, _soc)
                     else:
@@ -60,9 +52,9 @@ if __name__ == '__main__':
                 print(f"\nPERIOD: {t}")
                 print(f"---BUS: {bus} finished---")
                 charge_finished[bus] = True
-                
-
-            
+                skip_count += 1
+        
+        
     
     end_time = time.time()  # 종료 시간
     elapsed_time = end_time - start_time  # 작동 시간 계산

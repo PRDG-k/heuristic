@@ -1,0 +1,4 @@
+Objective Function Value: 863839.4597479679
+Solving Time: 92.70405077934265
+Peak Shaving: -1886.6668175998432
+Iteration Count: 43200

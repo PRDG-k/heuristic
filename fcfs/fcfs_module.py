@@ -43,36 +43,13 @@ def calculate_demand(bus, soc):
             'n_bus' : 350}
     
     if bus[0] == '1':
-        return capa['day_bus'] * 0.7 - soc
+        return capa['day_bus'] * 0.75 - soc
     else:
-        return capa['n_bus'] * 0.7 - soc
+        return capa['n_bus'] * 0.75 - soc
     
 def remove_bus(bus):
     if bus in seize_list:
         seize_list.remove(bus)
-
-# def bus_departure(charging_list, bus, t, soc):
-
-#     remove_bus(charging_list, bus)
-
-#     consumption = 0.25
-#     sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": consumption, "SOC": soc - consumption}
-
-#     return sol
-
-# def bus_charging(charging_list, bus, t, soc):
-
-#     bandwidth = 0.4166667
-#     required = calculate_demand(bus, soc)
-
-#     if (required > 0) & (len(charging_list) <= 30):
-#         _sol = {'bus': bus, 'period': t, "charge": bandwidth, "discharge": 0, "consumption": 0, "SOC": soc + bandwidth}
-#         charging_list.append(bus)
-#     else:
-#         _sol = {'bus': bus, 'period': t, "charge": 0, "discharge": 0, "consumption": 0, "SOC": soc}
-#         remove_bus(charging_list, bus)
-
-#     return _sol
 
 def check_peak(row):
     if row in peak:
@@ -81,7 +58,7 @@ def check_peak(row):
         return False
 
 
-def in_list_decision( bus, t, soc):
+def in_list_decision(bus, t, soc):
     is_required = calculate_demand(bus, soc) > 0
     is_peak = check_peak(t)
 
@@ -115,7 +92,7 @@ def not_in_list_decision(bus, t, soc):
             _sol = TEMPLATE(bus, t, soc, 4)
             pass
     else:
-        # seizable
+        # Seizable
         if is_required:
             _sol = TEMPLATE(bus, t, soc, 0)
             seize_list.append(bus)
