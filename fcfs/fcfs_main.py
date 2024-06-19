@@ -14,12 +14,6 @@ if __name__ == '__main__':
     T = range(1, NT+1)
 
     on_station = on_station_list(schedule, NT)
-
-    # # list of seize n
-    # seize_list = []
-
-    # # list of required n
-    # wait_list = []
     
 
     import time
@@ -36,6 +30,8 @@ if __name__ == '__main__':
 
             # if charge_finished[bus] == True:
             #     continue
+
+            ## 조건 단순화 / iteration 탈출 / DataFrame 병합 문제 / trivial 한 케이스는 카운트 하지 않도록 /
 
             try:
                 filt= (solution['bus'] == bus) & (solution['period'] == t-1)
@@ -61,8 +57,6 @@ if __name__ == '__main__':
                 print(f"---BUS: {bus} finished---")
                 charge_finished[bus] = True
                 
-
-            
     
     end_time = time.time()  # 종료 시간
     elapsed_time = end_time - start_time  # 작동 시간 계산
@@ -74,5 +68,3 @@ if __name__ == '__main__':
     solution.to_csv("fcfs_solution.csv")
 
     export_result(solution, elapsed_time, iter_count)
-
-    
